@@ -89,8 +89,11 @@ def extract_sections(text,output={},debug=False):
     nlp.add_pipe(expand_sections)
     doc=nlp(text)
     if debug:
-        print_debug('SESSION TOKENS','\n'.join(['{} {}'.format(i,t.text) for i,t in enumerate(doc)]))
-        print_debug('SESSION ENTITIES','\n'.join(['{}:{}:{}:{}'.format(ent.label_,ent.text.strip(),ent.start,ent.end) for ent in doc.ents]))
+        print_debug('SESSION TOKENS','\n'.
+            join(['{} {}'.format(i,t.text) for i,t in enumerate(doc)]))
+        print_debug('SESSION ENTITIES','\n'.
+            join(['{}:{}:{}:{}'.format(ent.label_,ent.text.strip(),ent.start,ent.end) 
+            for ent in doc.ents]))
     return update_output(doc,output)
 
 def process_file(filepath,debug=False):
@@ -115,7 +118,7 @@ def process_file(filepath,debug=False):
 
 if __name__ == "__main__":
     debug = False
-    filepath='CVs/Resume.DOCX'
+    filepath='/path/to/pdfordocx'
     try:
         filepath = sys.argv[1]
         debug = sys.argv[2] == 'debug'
