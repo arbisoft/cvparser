@@ -101,7 +101,7 @@ def extract_sections(text,output={},debug=False):
 
 def process_file(filepath,debug=False):
     text1 = textract.process(filepath).decode('utf-8')
-    text2 = str(bytearray(parser.from_file(filepath)['content'],encoding='utf-8'),'utf-8')
+    text2 = parser.from_file(filepath)['content']
     if debug:
         print_debug('Raw Text Textract',text1)
         print_debug('Raw Test Tika',text2)
@@ -121,7 +121,7 @@ def process_file(filepath,debug=False):
 
 if __name__ == "__main__":
     debug = False
-    filepath='CVs/Abdul_Moeed.pdf'
+    filepath='/path/to/pdfordocx'
     try:
         filepath = sys.argv[1]
         debug = sys.argv[2] == 'debug'
