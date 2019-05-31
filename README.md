@@ -4,7 +4,7 @@ Using spacy to extract and parse text from .pdf and .docx resumes
 
 ### Instructions
 
-1. Create a python3 virtual env: 
+1. Create a python3 virtual env and activate it: 
 
    `python3 -m venv '/path/to/venv'`
 
