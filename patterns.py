@@ -14,9 +14,13 @@ section_patterns = [
     {"label": "SECTIONS", "pattern":[{"lower":"summary"},{'TEXT':{'REGEX':'\n'}}]},
     {"label":"SECTIONS", "pattern":[{"lower":"technical"},{"lower":"skills"},{"TEXT":":"}]},
     {"label":"SECTIONS", "pattern":[{"lower":"professional"},{"lower":"summary"},{"TEXT":":"}]},
+    {"label":"SECTIONS", "pattern":[{"lower":"professional"},{"lower":"development"},{'TEXT':{'REGEX':'\n'}}]},
     {"label":"SECTIONS", "pattern":[{"lower":"projects"},{"lower":"information"},{'TEXT':{'REGEX':'\n'}}]},
-    {"label":"SECTIONS", "pattern":[{"lower":"roles"},{"lower":"&"},{"lower":"responsibilities"},{'TEXT':{'REGEX':'\n'}}]},
+    {"label":"SECTIONS", "pattern":[{"lower":"educational"},{"lower":"background"},{'TEXT':{'REGEX':'\n'}}]},
     {"label":"SECTIONS", "pattern":[{"lower":"academic"},{"lower":"projects"},{'TEXT':{'REGEX':'\n'}}]},
+
+
+    {"label":"SECTIONS", "pattern":[{"lower":"roles"},{"lower":"&"},{"lower":"responsibilities"},{'TEXT':{'REGEX':'\n'}}]},
     {"label":"SECTIONS", "pattern":[{"lower":"career"},{"lower":"objective"},{'TEXT':{'REGEX':'\n'}}]},
     {"label":"SECTIONS", "pattern":[{"lower":"technical"},{"lower":"profile"},{'TEXT':{'REGEX':'\n'}}]},
     {"label":"SECTIONS", "pattern":[{"lower":"professional"},{"lower":"skills"},{'TEXT':{'REGEX':'\n'}}]}, 
@@ -44,7 +48,7 @@ patterns = [
     {"label":"CELL", "pattern":[{"LIKE_NUM":True,"length":4},{"TEXT":{"REGEX":"[–-]"}},{"LIKE_NUM":True,"length":7}]},
     #{"label":"CELL", "pattern":[{"TEXT":{"REGEX":"\+\d+.\d+.\d+"}}]},
     {"label":"CELL", "pattern":[{"TEXT":'('},{'like_num':True},{"TEXT":')'},{'like_num':True,'length':7}]},
-
+    {"label": "LINKS", "pattern":[{"LIKE_URL":True}]},
 
     #patterns for skills
     {"label":"SKILL", "pattern":[{"lower":"c#.net"}]},

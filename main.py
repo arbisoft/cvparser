@@ -45,6 +45,7 @@ def update_output(doc,output):
 
 def expand_sections(doc):
     new_ents = []
+    ent = next_ent = None
     for ent, next_ent in pairwise(doc.ents):
         label= ent.text.strip()
         if ent.label_ == "SECTIONS" and ent.start != 0:
@@ -58,6 +59,8 @@ def expand_sections(doc):
 
     #last item doesnt get processed when iterating pairwise
     #so we need additional code to process it
+    if len(doc.ents) == 1:
+        next_ent = doc.ents[0]
     if next_ent.label_ == "SECTIONS" and next_ent.start != 0:
         try:
             new_ent = Span(doc,next_ent.end,len(doc),label=next_ent.text.strip())
@@ -98,7 +101,7 @@ def extract_sections(text,output={},debug=False):
 
 def process_file(filepath,debug=False):
     text1 = textract.process(filepath).decode('utf-8')
-    text2 = parser.from_file(filepath)['content']
+    text2 = str(bytearray(parser.from_file(filepath)['content'],encoding='utf-8'),'utf-8')
     if debug:
         print_debug('Raw Text Textract',text1)
         print_debug('Raw Test Tika',text2)
@@ -118,11 +121,11 @@ def process_file(filepath,debug=False):
 
 if __name__ == "__main__":
     debug = False
-    filepath='/path/to/pdfordocx'
+    filepath='CVs/Abdul_Moeed.pdf'
     try:
         filepath = sys.argv[1]
         debug = sys.argv[2] == 'debug'
     except:
         pass
     output = process_file(filepath,debug=debug)
-    print(json.dumps(output,indent=2))
+    print(json.dumps(output,indent=2, ensure_ascii=False))
