@@ -7,7 +7,7 @@ help:
 	@echo "  deployment                  install dependencies for deployment"
 
 requirements:
-	# pip install -r requirements.txt
+	pip install -r requirements.txt
 	sudo apt-get install swig
 	sudo apt-get install libpulse-dev
 	sudo apt-get install libasound2-dev
