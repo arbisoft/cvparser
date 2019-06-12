@@ -27,8 +27,11 @@ def upload():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
             output = process_file(file_path, debug=True)
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-            return jsonify({'data': json.dumps(output, indent=2, ensure_ascii=False)})
+            response = app.response_class(
+                response=json.dumps(output),
+                status=200,
+                mimetype='application/json'
+            )
+            return response
         except Exception as e:
             return jsonify({'error': str(e)})
