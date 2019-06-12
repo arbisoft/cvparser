@@ -18,7 +18,13 @@ def upload():
     if request.method == 'POST':
         try:
             file = request.files['file']
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            # right now existing cvs contains no ext so we have to add ext here.
+            filename = file.filename
+
+            if "." not in filename:
+                filename = filename + ".pdf"
+
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
             output = process_file(file_path, debug=True)
             response = app.response_class(
