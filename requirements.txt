@@ -3,3 +3,4 @@ spacy==2.1.4
 pdfminer.six
 tika
 Flask==1.0.3
+gunicorn==19.9.0
