@@ -1,20 +1,7 @@
 # .gitignore for current project
-### Files private to developers
-hirestream/settings/private.py
 
 ### Python artifacts
 *.pyc
-
-### Project local files and directories
-*.sqlite3
-hirestream/static/
-hirestream/staticfiles/
-logs/*
-hirestream/log/*
-hirestream/logs/*
-hirestream/apps/logs/*
-site_media/
-hirestream/old_data/Archive.zip
 
 .pytest_cache/
 
@@ -81,12 +68,5 @@ autodeploy.properties
 .vscode
 __pycache__
 .idea
-frontend/package-lock.json
-frontend/webpack-stats.dev.json
-frontend/webpack-stats.prod.json
-package-lock.json
-frontend/src/constants/config.js
 
 venv/
-
-hirestream/settings/production_config.json
