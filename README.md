@@ -10,9 +10,13 @@ Using spacy to extract and parse text from .pdf and .docx resumes
 
 2. Install requirements:
 
-   `pip install -r requirements.txt` 
-
-   Note that you may run into a problem with textract installation due to pocketsphinx. You can solve that by following the instructions [here](https://github.com/bambocher/pocketsphinx-python/issues/28#issuecomment-334493324)
+   If pocketsphinx is not installed then first run:
+   
+       `make install_pocketsphinx`
+   
+   When pocketsphinx installed, then run:
+      
+       `make requirements`
 
 
 3. Invoke the script from command line:
