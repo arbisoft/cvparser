@@ -16,7 +16,7 @@ install_pocketsphinx:
 	sudo apt-get install swig -y
 	sudo apt-get install libpulse-dev -y
 	sudo apt-get install libasound2-dev -y
-	cd pocketsphinx-python; pwd; sed -i 's/al.h/OpenAL\/al.h/' deps/sphinxbase/src/libsphinxad/ad_openal.c; sed -i 's/alc.h/OpenAL\/alc.h/' deps/sphinxbase/src/libsphinxad/ad_openal.c; python setup.py install
+	cd pocketsphinx-python; pwd; sed -i 's/al.h/OpenAL\/al.h/' deps/sphinxbase/src/libsphinxad/ad_openal.c; sed -i 's/alc.h/OpenAL\/alc.h/' deps/sphinxbase/src/libsphinxad/ad_openal.c; sudo python setup.py install
 
 clean:
 	sudo rm -r pocketsphinx-python
