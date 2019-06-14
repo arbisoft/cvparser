@@ -65,7 +65,7 @@ def expand_sections(doc):
     # so we need additional code to process it
     if len(doc.ents) == 1:
         next_ent = doc.ents[0]
-    if next_ent.label_ == "SECTIONS" and next_ent.start != 0:
+    if next_ent and next_ent.label_ == "SECTIONS" and next_ent.start != 0:
         try:
             new_ent = Span(doc, next_ent.end, len(doc), label=next_ent.text.strip())
             new_ents.append(new_ent)
@@ -101,7 +101,7 @@ def extract_sections(text, output={}, debug=False):
                     join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)]))
         print_debug('SESSION ENTITIES', '\n'.
                     join(['{}:{}:{}:{}'.format(ent.label_, ent.text.strip(), ent.start, ent.end)
-                          for ent in doc.ents]))
+                        for ent in doc.ents]))
     return update_output(doc, output)
 
 
@@ -117,7 +117,6 @@ def process_file(filepath, debug=False):
 
     for k in ['name', 'cell', 'email', 'nic', 'skills']:
         output[k] = []
-
     output = extract_name(text1, output)
     output = extract_entities(text1, output, debug=debug)
     sections1 = extract_sections(text1, {})
