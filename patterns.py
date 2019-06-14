@@ -636,4 +636,11 @@ patterns = [
     {"label": "SKILL", "pattern": [{"lower": "storemanagement"}]},
     {"label": "SKILL", "pattern": [{"lower": "networksecurity"}]},
     {"label": "SKILL", "pattern": [{"lower": "circleci"}]},
+    {"label": "SKILL", "pattern": [{"lower": "oop"}]},
+    {"label": "SKILL", "pattern": [{"lower": "windows"}]},
+    {"label": "SKILL", "pattern": [{"lower": "ms office"}]},
+    {"label": "SKILL", "pattern": [{"lower": "team player"}]},
+    {"label": "SKILL", "pattern": [{"lower": "opencv"}]},
+    {"label": "SKILL", "pattern": [{"lower": "soap"}]},
+    {"label": "SKILL", "pattern": [{"lower": "html 5"}]},
 ]
