@@ -113,6 +113,10 @@ def process_file(filepath, debug=False):
         print_debug('Raw Text Textract', text1)
         print_debug('Raw Test Tika', text2)
 
+    raw_output = text1
+    if len(text2) > len(text1):
+        raw_output = text2
+
     output = OrderedDict()
 
     for k in ['name', 'cell', 'email', 'nic', 'skills']:
@@ -127,7 +131,7 @@ def process_file(filepath, debug=False):
     else:
         output = extract_sections(text1, output, debug=debug)
 
-    return output
+    return output, raw_output
 
 
 if __name__ == "__main__":
@@ -138,5 +142,5 @@ if __name__ == "__main__":
         debug = sys.argv[2] == 'debug'
     except:
         pass
-    output = process_file(filepath, debug=debug)
+    output, raw_output = process_file(filepath, debug=debug)
     print(json.dumps(output, indent=2, ensure_ascii=False))
