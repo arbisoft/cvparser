@@ -33,6 +33,7 @@ def upload():
                 status=200,
                 mimetype='application/json'
             )
+            os.remove(file_path)
             return response
         except Exception as e:
             return jsonify({'error': str(e)})
