@@ -1,16 +1,24 @@
-import os
-
 import json
-from flask import Flask, request, jsonify
+import os
+from tkinter.constants import FALSE
+
+from flask import Flask, jsonify, request
+from flask_caching import Cache
+
+from constants import CacheDuration, CACHE_CONFIG
 from main import process_file
+from workstream.utils import get_employment_education_suggestions
 
 app = Flask(__name__, static_folder='static')
-app.config["DEBUG"] = False
+app.config["DEBUG"] = FALSE
 
 SRCDIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(SRCDIR, 'static')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+cache = Cache(app, config=CACHE_CONFIG)
+
+get_cached_employment_educations = cache.cached(timeout=CacheDuration.one_day.value)(get_employment_education_suggestions)
 
 @app.route('/parse', methods=['post'])
 def upload():

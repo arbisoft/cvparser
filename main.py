@@ -1,13 +1,17 @@
-import json, sys
-import tika
-import patterns
-import textract
+import json
+import sys
 from collections import OrderedDict
+from itertools import tee
+
+import spacy
+import textract
+import tika
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler
-from itertools import tee
 from spacy.tokens import Span
 from tika import parser
+
+import patterns
 
 tika.initVM()
 
@@ -105,7 +109,21 @@ def extract_sections(text, output={}, debug=False):
     return update_output(doc, output)
 
 
-def process_file(filepath, debug=False):
+def filter_employments_educations(cv_data):
+    nlp = spacy.load('en_core_web_sm')
+
+    for education in cv_data.get('education', []):
+        doc = nlp(education)
+        for ent in doc.ents:
+            print(ent.text, ent.start_char, ent.end_char, ent.label_)
+
+    for experience in cv_data.get('experience', []):
+        doc = nlp(experience)
+        for ent in doc.ents:
+            print(ent.text, ent.start_char, ent.end_char, ent.label_)
+
+
+def process_file(filepath, educations, companies, debug=False):
     text1 = textract.process(filepath).decode('utf-8')
     text2 = parser.from_file(filepath)['content']
 
@@ -131,16 +149,6 @@ def process_file(filepath, debug=False):
     else:
         output = extract_sections(text1, output, debug=debug)
 
+    filter_employments_educations(output)
+
     return output, raw_output
-
-
-if __name__ == "__main__":
-    debug = False
-    filepath = '/path/to/pdfordocx'
-    try:
-        filepath = sys.argv[1]
-        debug = sys.argv[2] == 'debug'
-    except:
-        pass
-    output, raw_output = process_file(filepath, debug=debug)
-    print(json.dumps(output, indent=2, ensure_ascii=False))
