@@ -13,12 +13,6 @@ class StatusCode(Enum):
     HTTP_400_BAD_REQUEST = 400
     HTTP_404_NOT_FOUND = 404
 
-WORKSTREAM_CREDENTIALS = {
-    "api_url": "https://workstream-staging3.arbisoft.com/",
-	"email": "test@mail.com",
-	"password": "test54123"
-}
-
 CACHE_CONFIG = {
     "DEBUG": False,
     "CACHE_TYPE": "redis",
