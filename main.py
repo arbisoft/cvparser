@@ -1,5 +1,6 @@
 import json
 import sys
+from pathlib import Path
 from collections import OrderedDict
 from itertools import tee
 
@@ -43,6 +44,9 @@ def update_output(doc, output):
     for ent in doc.ents:
         if not output.get(ent.label_.lower(), None):
             output[ent.label_.lower()] = []
+        # if ent.label_.lower() in ['education', 'experience']:
+        #     output[ent.label_.lower()].append(ent.text)
+        # else:
         output[ent.label_.lower()] += [t for t in ent.text.splitlines() if t.strip()]
     for ent in doc.ents:
         # removing duplicate skills
@@ -110,20 +114,45 @@ def extract_sections(text, output={}, debug=False):
 
 
 def filter_employments_educations(cv_data):
-    nlp = spacy.load('en_core_web_sm')
+    model = 'education'
+    model_dir = Path(model)
+    if model and model_dir.exists():
+        nlp = spacy.load(model)
+        print("Loaded model '%s'" % model)
+    else:
+        nlp = spacy.load('en_core_web_sm')
+        print("Created new model")
 
-    for education in cv_data.get('education', []):
+    cv_data['tagged_education'] = {}
+    for education in cv_data.get('education', cv_data.get('educational background', [])):
         doc = nlp(education)
+        cv_data['tagged_education'][education] = {}
         for ent in doc.ents:
-            print(ent.text, ent.start_char, ent.end_char, ent.label_)
+            if ent.label_ != 'DESIGNATION':
+                if ent.label_ in cv_data['tagged_education'][education]:
+                    cv_data['tagged_education'][education][ent.label_].append(ent.text)
+                else:
+                    cv_data['tagged_education'][education][ent.label_] = [ent.text]
+                print(ent.text, ent.start_char, ent.end_char, ent.label_)
+        # if 'ORG' not in cv_data['tagged_education'][education]:
+        #     del cv_data['tagged_education'][education]
 
-    for experience in cv_data.get('experience', []):
+    cv_data['tagged_experience'] = {}
+    for experience in cv_data.get('experience', cv_data.get('work experience', [])):
         doc = nlp(experience)
+        cv_data['tagged_experience'][experience] = {}
         for ent in doc.ents:
-            print(ent.text, ent.start_char, ent.end_char, ent.label_)
+            if ent.label_ != 'DEGREE':
+                if ent.label_ in cv_data['tagged_experience'][experience]:
+                    cv_data['tagged_experience'][experience][ent.label_].append(ent.text)
+                else:
+                    cv_data['tagged_experience'][experience][ent.label_] = [ent.text]
+                print(ent.text, ent.start_char, ent.end_char, ent.label_)
+        # if 'ORG' not in cv_data['tagged_experience'][experience]:
+        #     del cv_data['tagged_experience'][experience]
 
 
-def process_file(filepath, educations, companies, debug=False):
+def process_file(filepath, debug=False):
     text1 = textract.process(filepath).decode('utf-8')
     text2 = parser.from_file(filepath)['content']
 
