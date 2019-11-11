@@ -53,6 +53,9 @@ patterns = [
     {"label": "EMAIL", "pattern": [{"LIKE_EMAIL": True}]},
 
     # patterns for cellphone
+    # Enables match for prefixed country code 
+    {"label": "CELL", "pattern": [{"LIKE_NUM": True, "length": 2}, {"IS_PUNCT": True}, {"LIKE_NUM": True, "length": 3},
+                                  {"IS_PUNCT": True}, {"LIKE_NUM": True, "length": 7}]},
     {"label": "CELL", "pattern": [{"LIKE_NUM": True, "length": 3}, {"IS_PUNCT": True}, {"LIKE_NUM": True, "length": 3},
                                   {"IS_PUNCT": True}, {"LIKE_NUM": True, "length": 7}]},
     {"label": "CELL",
