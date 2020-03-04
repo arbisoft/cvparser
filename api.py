@@ -5,7 +5,7 @@ from tkinter.constants import FALSE
 from flask import Flask, jsonify, request
 from flask_caching import Cache
 
-from constants import CACHE_CONFIG, CacheDuration, StatusCode
+from constants import CACHE_CONFIG, StatusCode
 from main import process_file
 
 app = Flask(__name__, static_folder='static')

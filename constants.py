@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class CacheDuration(Enum):
-    one_hour = 3600
-    one_day = 3600 * 24
-    one_month = 3600 * 24 * 30
+    ONE_HOUR = 3600
+    ONE_DAY = 3600 * 24
+    ONE_MONTH = 3600 * 24 * 30
 
 
 class StatusCode(Enum):
@@ -13,8 +13,9 @@ class StatusCode(Enum):
     HTTP_400_BAD_REQUEST = 400
     HTTP_404_NOT_FOUND = 404
 
+
 CACHE_CONFIG = {
     "DEBUG": False,
     "CACHE_TYPE": "redis",
-    "CACHE_DEFAULT_TIMEOUT": CacheDuration.one_hour
+    "CACHE_DEFAULT_TIMEOUT": CacheDuration.ONE_HOUR
 }
