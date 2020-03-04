@@ -25,9 +25,12 @@ def label_entity(comment, entities, field, label):
 
 
 def merge_education(updated_education, tagged_education):
-    updated_education['org'] = updated_education['org'] if updated_education['org'] else ' '.join(tagged_education.get('ORG', []))
-    updated_education['start_date'] = ' '.join(tagged_education['START_DATE']) if 'START_DATE' in tagged_education else updated_education.get('start_date', '')
-    updated_education['end_date'] = ' '.join(tagged_education['END_DATE']) if 'END_DATE' in tagged_education else updated_education.get('end_date', '')
+    updated_education['org'] = updated_education['org'] \
+        if updated_education['org'] else ' '.join(tagged_education.get('ORG', []))
+    updated_education['start_date'] = ' '.join(tagged_education['START_DATE']) \
+        if 'START_DATE' in tagged_education else updated_education.get('start_date', '')
+    updated_education['end_date'] = ' '.join(tagged_education['END_DATE']) \
+        if 'END_DATE' in tagged_education else updated_education.get('end_date', '')
 
 
 def get_education_employment_keys(cv_data):
