@@ -1,18 +1,20 @@
 import json
+import patterns
 import sys
-from pathlib import Path
-from collections import OrderedDict
-from itertools import tee
-
+import re
 import spacy
 import textract
 import tika
+
+from pathlib import Path
+from collections import OrderedDict
+from itertools import tee
 from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
+from spacy.pipeline import EntityRuler, merge_entities
 from spacy.tokens import Span
 from tika import parser
 
-import patterns
+from utils import get_education_employment_keys, tag_entity
 
 tika.initVM()
 
@@ -44,10 +46,12 @@ def update_output(doc, output):
     for ent in doc.ents:
         if not output.get(ent.label_.lower(), None):
             output[ent.label_.lower()] = []
-        # if ent.label_.lower() in ['education', 'experience']:
-        #     output[ent.label_.lower()].append(ent.text)
-        # else:
-        output[ent.label_.lower()] += [t for t in ent.text.splitlines() if t.strip()]
+        education, employment = get_education_employment_keys(output)
+        if ent.label_.lower() in [education, employment]:
+            text = re.sub(r'[\s]', ' ', ent.text)
+            output[ent.label_.lower()] = text.encode('ascii', 'ignore').decode()
+        else:
+            output[ent.label_.lower()] += [t for t in ent.text.splitlines() if t.strip()]
     for ent in doc.ents:
         # removing duplicate skills
         if ent.label_.lower() == 'skill':
@@ -114,6 +118,19 @@ def extract_sections(text, output={}, debug=False):
 
 
 def filter_employments_educations(cv_data):
+    tagged_education = []
+    tagged_employment = []
+
+    def extract_degree_orgs(doc):
+        entities = [ent for ent in doc.ents if ent.label_ == "ORG"]
+        tag_entity('education', entities, tagged_education)
+        return doc
+
+    def extract_position_employments(doc):
+        entities = [ent for ent in doc.ents if ent.label_ == "ORG"]
+        tag_entity('employment', entities, tagged_education)
+        return doc
+
     model = 'education'
     model_dir = Path(model)
     if model and model_dir.exists():
@@ -123,33 +140,21 @@ def filter_employments_educations(cv_data):
         nlp = spacy.load('en_core_web_sm')
         print("Created new model")
 
-    cv_data['tagged_education'] = {}
-    for education in cv_data.get('education', cv_data.get('educational background', [])):
-        doc = nlp(education)
-        cv_data['tagged_education'][education] = {}
-        for ent in doc.ents:
-            if ent.label_ != 'DESIGNATION':
-                if ent.label_ in cv_data['tagged_education'][education]:
-                    cv_data['tagged_education'][education][ent.label_].append(ent.text)
-                else:
-                    cv_data['tagged_education'][education][ent.label_] = [ent.text]
-                print(ent.text, ent.start_char, ent.end_char, ent.label_)
-        # if 'ORG' not in cv_data['tagged_education'][education]:
-        #     del cv_data['tagged_education'][education]
+    nlp.add_pipe(merge_entities)
+    nlp.add_pipe(extract_degree_orgs)
+    nlp.add_pipe(extract_position_employments)
 
-    cv_data['tagged_experience'] = {}
-    for experience in cv_data.get('experience', cv_data.get('work experience', [])):
-        doc = nlp(experience)
-        cv_data['tagged_experience'][experience] = {}
-        for ent in doc.ents:
-            if ent.label_ != 'DEGREE':
-                if ent.label_ in cv_data['tagged_experience'][experience]:
-                    cv_data['tagged_experience'][experience][ent.label_].append(ent.text)
-                else:
-                    cv_data['tagged_experience'][experience][ent.label_] = [ent.text]
-                print(ent.text, ent.start_char, ent.end_char, ent.label_)
-        # if 'ORG' not in cv_data['tagged_experience'][experience]:
-        #     del cv_data['tagged_experience'][experience]
+    education_key, employment_key = get_education_employment_keys(cv_data)
+
+    with nlp.disable_pipes('extract_position_employments'):
+        nlp(cv_data.get(education_key, ''))
+
+    cv_data['tagged_education'] = tagged_education
+
+    with nlp.disable_pipes('extract_degree_orgs'):
+        nlp(cv_data.get(employment_key, ''))
+
+    cv_data['tagged_employment'] = tagged_employment
 
 
 def process_file(filepath, debug=False):
