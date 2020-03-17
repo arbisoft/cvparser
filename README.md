@@ -18,6 +18,10 @@ Using spacy to extract and parse text from .pdf and .docx resumes
 
        `make requirements`
 
+4. MacOS users also need to run:
+
+    `brew install pkg-config poppler`
+
 3. Run the flask server:
 
     `FLASK_APP=api.py flask run`

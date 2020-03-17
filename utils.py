@@ -1,4 +1,5 @@
 from collections import deque
+from constants import EntityType
 
 
 def get_dates(date_of_attendance):
@@ -61,14 +62,12 @@ def tag_entity(entity_type, entities, tagged_entities):
         nodes.appendleft(head)
         while nodes:
             node = nodes.popleft()
-            if entity_type == 'education' and node.ent_type_ == 'DEGREE':
+            if entity_type == EntityType.Education and node.ent_type_ == 'DEGREE':
                 entity['degree'] = node.text
-            if entity_type == 'employment' and node.ent_type_ == 'DESIGNATION':
+            if entity_type == EntityType.Employment and node.ent_type_ == 'DESIGNATION':
                 entity['designation'] = node.text
-            if node.ent_type_ == 'START_DATE':
-                entity['start_date'] = node.text
-            if node.ent_type_ == 'END_DATE':
-                entity['end_date'] = node.text
+            if node.ent_type_ in ['START_DATE', 'END_DATE']:
+                entity[node.ent_type_.lower()] = node.text
 
             nodes += node.children
         tagged_entities.append(entity)

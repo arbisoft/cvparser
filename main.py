@@ -15,6 +15,7 @@ from spacy.tokens import Span
 from tika import parser
 
 from utils import get_education_employment_keys, tag_entity
+from constants import EntityType
 
 tika.initVM()
 
@@ -123,12 +124,12 @@ def filter_employments_educations(cv_data):
 
     def extract_degree_orgs(doc):
         entities = [ent for ent in doc.ents if ent.label_ == "ORG"]
-        tag_entity('education', entities, tagged_education)
+        tag_entity(EntityType.Education, entities, tagged_education)
         return doc
 
     def extract_position_employments(doc):
         entities = [ent for ent in doc.ents if ent.label_ == "ORG"]
-        tag_entity('employment', entities, tagged_education)
+        tag_entity(EntityType.Employment, entities, tagged_education)
         return doc
 
     model = 'education'

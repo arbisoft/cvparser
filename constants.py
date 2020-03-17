@@ -14,6 +14,11 @@ class StatusCode(Enum):
     HTTP_404_NOT_FOUND = 404
 
 
+class EntityType(Enum):
+    Education = 'education'
+    Employment = 'employment'
+
+
 CACHE_CONFIG = {
     "DEBUG": False,
     "CACHE_TYPE": "redis",
