@@ -1,5 +1,8 @@
+import logging
+from logging.handlers import RotatingFileHandler
+
 from collections import deque
-from constants import EntityType
+from constants import EntityType, Tag, LOG_PATH, LOGGER_NAME, MAX_BYTES_LOG
 
 
 def get_dates(date_of_attendance):
@@ -35,8 +38,8 @@ def merge_education(updated_education, tagged_education):
 
 
 def get_education_employment_keys(cv_data):
-    education_key = 'education'
-    employment_key = 'employment'
+    education_key = EntityType.EDUCATION
+    employment_key = EntityType.EMPLOYMENT
     for key, _ in cv_data.items():
         if 'education' in key:
             education_key = key
@@ -62,12 +65,24 @@ def tag_entity(entity_type, entities, tagged_entities):
         nodes.appendleft(head)
         while nodes:
             node = nodes.popleft()
-            if entity_type == EntityType.Education and node.ent_type_ == 'DEGREE':
+            if entity_type == EntityType.EDUCATION and node.ent_type_ == Tag.DEGREE.value:
                 entity['degree'] = node.text
-            if entity_type == EntityType.Employment and node.ent_type_ == 'DESIGNATION':
+            if entity_type == EntityType.EMPLOYMENT and node.ent_type_ == Tag.DESIGNATION.value:
                 entity['designation'] = node.text
-            if node.ent_type_ in ['START_DATE', 'END_DATE']:
+            if node.ent_type_ in [Tag.START_DATE.value, Tag.END_DATE.value]:
                 entity[node.ent_type_.lower()] = node.text
 
             nodes += node.children
         tagged_entities.append(entity)
+
+
+def get_logger(debug=False):
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.setLevel(logging.INFO)
+    if debug:
+        logger.setLevel(logging.DEBUG)
+
+    handler = RotatingFileHandler(LOG_PATH, maxBytes=MAX_BYTES_LOG)
+    logger.addHandler(handler)
+
+    return logger

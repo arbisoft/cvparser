@@ -7,6 +7,7 @@ from pathlib import Path
 from flask_script import Command, Option
 from spacy.util import minibatch, compounding
 
+from constants import Tag
 from utils import label_entity, get_dates
 
 
@@ -77,7 +78,7 @@ class TrainModel(Command):
 
     def run(self, model, input_folder):
         model = model.strip()
-        ADDITIONAL_LABELS = ['DEGREE', 'DESIGNATION', 'START_DATE', 'END_DATE']
+        ADDITIONAL_LABELS = [tag.value for tag in Tag]
         n_iter = 25
 
         TRAIN_DATA = self.get_train_data(input_folder)
@@ -111,7 +112,7 @@ class TrainModel(Command):
                     nlp.update(
                         texts,  # batch of texts
                         annotations,  # batch of annotations
-                        drop=0,  # dropout - make it harder to memorise data
+                        drop=0.25,  # dropout - make it harder to memorise data
                         losses=losses,
                     )
                 print("Losses", losses)

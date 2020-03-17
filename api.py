@@ -27,7 +27,7 @@ def upload():
     file.save(file_path)
 
     try:
-        output, raw_output = process_file(file_path, debug=True)
+        output, raw_output = process_file(file_path)
 
         response = app.response_class(
             response=json.dumps({'data': output, 'raw_output': raw_output}),

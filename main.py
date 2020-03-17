@@ -1,23 +1,24 @@
 import json
-import patterns
-import sys
 import re
+import sys
+from collections import OrderedDict
+from itertools import tee
+from pathlib import Path
+
 import spacy
 import textract
 import tika
-
-from pathlib import Path
-from collections import OrderedDict
-from itertools import tee
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler, merge_entities
 from spacy.tokens import Span
 from tika import parser
 
-from utils import get_education_employment_keys, tag_entity
-from constants import EntityType
+import patterns
+from constants import EntityType, Tag
+from utils import get_education_employment_keys, tag_entity, get_logger
 
 tika.initVM()
+logger = get_logger()
 
 
 def pairwise(iterable):
@@ -33,14 +34,6 @@ def extract_name(text, output={}):
     output['name'] = [[l for l in lines
                        if l.strip() and l.strip().lower() not in ignorelist][0]]
     return output
-
-
-def print_debug(title, text):
-    print('-' * 80)
-    print('{: ^80}'.format(title))
-    print('-' * 80)
-    print(text)
-    print('-' * 80)
 
 
 def update_output(doc, output):
@@ -89,19 +82,20 @@ def expand_sections(doc):
     return doc
 
 
-def extract_entities(text, output={}, debug=False):
+def extract_entities(text, output={}):
     nlp = English()
     ruler = EntityRuler(nlp)
     ruler.add_patterns(patterns.patterns + patterns.section_patterns)
     nlp.add_pipe(ruler)
     doc = nlp(text)
-    if debug:
-        print_debug('TOKENS', '\n'.join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)]))
-        print_debug('ENTITIES', '\n'.join(['{}:{}'.format(ent.label_, ent.text) for ent in doc.ents]))
+
+    logger.debug('TOKENS: {}'.format('\n'.join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)])))
+    logger.debug('ENTITIES: {}'.format('\n'.join(['{}:{}'.format(ent.label_, ent.text) for ent in doc.ents])))
+
     return update_output(doc, output)
 
 
-def extract_sections(text, output={}, debug=False):
+def extract_sections(text, output={}):
     nlp = English()
     ruler = EntityRuler(nlp)
     ruler.add_patterns(patterns.section_patterns)
@@ -109,12 +103,11 @@ def extract_sections(text, output={}, debug=False):
     nlp.add_pipe(expand_sections)
     doc = nlp(text)
 
-    if debug:
-        print_debug('SESSION TOKENS', '\n'.
-                    join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)]))
-        print_debug('SESSION ENTITIES', '\n'.
-                    join(['{}:{}:{}:{}'.format(ent.label_, ent.text.strip(), ent.start, ent.end)
-                        for ent in doc.ents]))
+    logger.debug('SESSION TOKENS: {}'.format(
+        '\n'.join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)])))
+    logger.debug('SESSION ENTITIES: {}'.format(
+        '\n'.join(['{}:{}:{}:{}'.format(ent.label_, ent.text.strip(), ent.start, ent.end) for ent in doc.ents])))
+
     return update_output(doc, output)
 
 
@@ -123,23 +116,23 @@ def filter_employments_educations(cv_data):
     tagged_employment = []
 
     def extract_degree_orgs(doc):
-        entities = [ent for ent in doc.ents if ent.label_ == "ORG"]
-        tag_entity(EntityType.Education, entities, tagged_education)
+        entities = [ent for ent in doc.ents if ent.label_ == Tag.ORGANIZATION.value]
+        tag_entity(EntityType.EDUCATION, entities, tagged_education)
         return doc
 
     def extract_position_employments(doc):
-        entities = [ent for ent in doc.ents if ent.label_ == "ORG"]
-        tag_entity(EntityType.Employment, entities, tagged_education)
+        entities = [ent for ent in doc.ents if ent.label_ == Tag.ORGANIZATION.value]
+        tag_entity(EntityType.EMPLOYMENT, entities, tagged_education)
         return doc
 
     model = 'education'
     model_dir = Path(model)
     if model and model_dir.exists():
         nlp = spacy.load(model)
-        print("Loaded model '%s'" % model)
+        logger.info("Loaded model '%s'" % model)
     else:
         nlp = spacy.load('en_core_web_sm')
-        print("Created new model")
+        logger.info("Created new model")
 
     nlp.add_pipe(merge_entities)
     nlp.add_pipe(extract_degree_orgs)
@@ -158,13 +151,12 @@ def filter_employments_educations(cv_data):
     cv_data['tagged_employment'] = tagged_employment
 
 
-def process_file(filepath, debug=False):
+def process_file(filepath):
     text1 = textract.process(filepath).decode('utf-8')
     text2 = parser.from_file(filepath)['content']
 
-    if debug:
-        print_debug('Raw Text Textract', text1)
-        print_debug('Raw Test Tika', text2)
+    logger.debug('Raw Text Textract: {}'.format(text1))
+    logger.debug('Raw Test Tika: {}'.format(text2))
 
     raw_output = text1
     if len(text2) > len(text1):
@@ -175,14 +167,14 @@ def process_file(filepath, debug=False):
     for k in ['name', 'cell', 'email', 'nic', 'skills']:
         output[k] = []
     output = extract_name(text1, output)
-    output = extract_entities(text1, output, debug=debug)
+    output = extract_entities(text1, output)
     sections1 = extract_sections(text1, {})
     sections2 = extract_sections(text2, {})
 
     if len(sections2) >= len(sections1):
-        output = extract_sections(text2, output, debug=debug)
+        output = extract_sections(text2, output)
     else:
-        output = extract_sections(text1, output, debug=debug)
+        output = extract_sections(text1, output)
 
     filter_employments_educations(output)
 

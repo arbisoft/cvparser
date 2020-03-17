@@ -15,8 +15,16 @@ class StatusCode(Enum):
 
 
 class EntityType(Enum):
-    Education = 'education'
-    Employment = 'employment'
+    EDUCATION = 'education'
+    EMPLOYMENT = 'employment'
+
+
+class Tag(Enum):
+    DEGREE = 'DEGREE'
+    DESIGNATION = 'DESIGNATION'
+    START_DATE = 'START_DATE'
+    END_DATE = 'END_DATE'
+    ORGANIZATION = 'ORG'
 
 
 CACHE_CONFIG = {
@@ -24,3 +32,7 @@ CACHE_CONFIG = {
     "CACHE_TYPE": "redis",
     "CACHE_DEFAULT_TIMEOUT": CacheDuration.ONE_HOUR
 }
+
+LOG_PATH = 'logs/cv_parse.log'
+LOGGER_NAME = "Debug Rotating Logs"
+MAX_BYTES_LOG = 1024 * 1024 * 10
