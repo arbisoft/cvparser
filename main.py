@@ -1,15 +1,24 @@
-import json, sys
-import tika
-import patterns
-import textract
+import json
+import re
+import sys
 from collections import OrderedDict
-from spacy.lang.en import English
-from spacy.pipeline import EntityRuler
 from itertools import tee
+from pathlib import Path
+
+import spacy
+import textract
+import tika
+from spacy.lang.en import English
+from spacy.pipeline import EntityRuler, merge_entities
 from spacy.tokens import Span
 from tika import parser
 
+import patterns
+from constants import EntityType, Tag
+from utils import get_education_employment_keys, tag_entity, get_logger
+
 tika.initVM()
+logger = get_logger()
 
 
 def pairwise(iterable):
@@ -27,19 +36,16 @@ def extract_name(text, output={}):
     return output
 
 
-def print_debug(title, text):
-    print('-' * 80)
-    print('{: ^80}'.format(title))
-    print('-' * 80)
-    print(text)
-    print('-' * 80)
-
-
 def update_output(doc, output):
     for ent in doc.ents:
         if not output.get(ent.label_.lower(), None):
             output[ent.label_.lower()] = []
-        output[ent.label_.lower()] += [t for t in ent.text.splitlines() if t.strip()]
+        education, employment = get_education_employment_keys(output)
+        if ent.label_.lower() in [education, employment]:
+            text = re.sub(r'[\s]', ' ', ent.text)
+            output[ent.label_.lower()] = text.encode('ascii', 'ignore').decode()
+        else:
+            output[ent.label_.lower()] += [t for t in ent.text.splitlines() if t.strip()]
     for ent in doc.ents:
         # removing duplicate skills
         if ent.label_.lower() == 'skill':
@@ -76,19 +82,20 @@ def expand_sections(doc):
     return doc
 
 
-def extract_entities(text, output={}, debug=False):
+def extract_entities(text, output={}):
     nlp = English()
     ruler = EntityRuler(nlp)
     ruler.add_patterns(patterns.patterns + patterns.section_patterns)
     nlp.add_pipe(ruler)
     doc = nlp(text)
-    if debug:
-        print_debug('TOKENS', '\n'.join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)]))
-        print_debug('ENTITIES', '\n'.join(['{}:{}'.format(ent.label_, ent.text) for ent in doc.ents]))
+
+    logger.debug('TOKENS: {}'.format('\n'.join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)])))
+    logger.debug('ENTITIES: {}'.format('\n'.join(['{}:{}'.format(ent.label_, ent.text) for ent in doc.ents])))
+
     return update_output(doc, output)
 
 
-def extract_sections(text, output={}, debug=False):
+def extract_sections(text, output={}):
     nlp = English()
     ruler = EntityRuler(nlp)
     ruler.add_patterns(patterns.section_patterns)
@@ -96,22 +103,60 @@ def extract_sections(text, output={}, debug=False):
     nlp.add_pipe(expand_sections)
     doc = nlp(text)
 
-    if debug:
-        print_debug('SESSION TOKENS', '\n'.
-                    join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)]))
-        print_debug('SESSION ENTITIES', '\n'.
-                    join(['{}:{}:{}:{}'.format(ent.label_, ent.text.strip(), ent.start, ent.end)
-                        for ent in doc.ents]))
+    logger.debug('SESSION TOKENS: {}'.format(
+        '\n'.join(['{} {}'.format(i, t.text) for i, t in enumerate(doc)])))
+    logger.debug('SESSION ENTITIES: {}'.format(
+        '\n'.join(['{}:{}:{}:{}'.format(ent.label_, ent.text.strip(), ent.start, ent.end) for ent in doc.ents])))
+
     return update_output(doc, output)
 
 
-def process_file(filepath, debug=False):
+def filter_employments_educations(cv_data):
+    tagged_education = []
+    tagged_employment = []
+
+    def extract_degree_orgs(doc):
+        entities = [ent for ent in doc.ents if ent.label_ == Tag.ORGANIZATION.value]
+        tag_entity(EntityType.EDUCATION, entities, tagged_education)
+        return doc
+
+    def extract_position_employments(doc):
+        entities = [ent for ent in doc.ents if ent.label_ == Tag.ORGANIZATION.value]
+        tag_entity(EntityType.EMPLOYMENT, entities, tagged_education)
+        return doc
+
+    model = 'education'
+    model_dir = Path(model)
+    if model and model_dir.exists():
+        nlp = spacy.load(model)
+        logger.info("Loaded model '%s'" % model)
+    else:
+        nlp = spacy.load('en_core_web_sm')
+        logger.info("Created new model")
+
+    nlp.add_pipe(merge_entities)
+    nlp.add_pipe(extract_degree_orgs)
+    nlp.add_pipe(extract_position_employments)
+
+    education_key, employment_key = get_education_employment_keys(cv_data)
+
+    with nlp.disable_pipes('extract_position_employments'):
+        nlp(cv_data.get(education_key, ''))
+
+    cv_data['tagged_education'] = tagged_education
+
+    with nlp.disable_pipes('extract_degree_orgs'):
+        nlp(cv_data.get(employment_key, ''))
+
+    cv_data['tagged_employment'] = tagged_employment
+
+
+def process_file(filepath):
     text1 = textract.process(filepath).decode('utf-8')
     text2 = parser.from_file(filepath)['content']
 
-    if debug:
-        print_debug('Raw Text Textract', text1)
-        print_debug('Raw Test Tika', text2)
+    logger.debug('Raw Text Textract: {}'.format(text1))
+    logger.debug('Raw Test Tika: {}'.format(text2))
 
     raw_output = text1
     if len(text2) > len(text1):
@@ -122,25 +167,15 @@ def process_file(filepath, debug=False):
     for k in ['name', 'cell', 'email', 'nic', 'skills']:
         output[k] = []
     output = extract_name(text1, output)
-    output = extract_entities(text1, output, debug=debug)
+    output = extract_entities(text1, output)
     sections1 = extract_sections(text1, {})
     sections2 = extract_sections(text2, {})
 
     if len(sections2) >= len(sections1):
-        output = extract_sections(text2, output, debug=debug)
+        output = extract_sections(text2, output)
     else:
-        output = extract_sections(text1, output, debug=debug)
+        output = extract_sections(text1, output)
+
+    filter_employments_educations(output)
 
     return output, raw_output
-
-
-if __name__ == "__main__":
-    debug = False
-    filepath = '/path/to/pdfordocx'
-    try:
-        filepath = sys.argv[1]
-        debug = sys.argv[2] == 'debug'
-    except:
-        pass
-    output, raw_output = process_file(filepath, debug=debug)
-    print(json.dumps(output, indent=2, ensure_ascii=False))
