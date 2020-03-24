@@ -1,6 +1,5 @@
 import json
 import os
-from tkinter.constants import FALSE
 
 from flask import Flask, jsonify, request
 from flask_caching import Cache
