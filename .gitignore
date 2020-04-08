@@ -70,3 +70,7 @@ __pycache__
 .idea
 
 venv/
+cvs
+education
+final_output
+complete_data
