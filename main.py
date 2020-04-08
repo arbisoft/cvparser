@@ -40,12 +40,7 @@ def update_output(doc, output):
     for ent in doc.ents:
         if not output.get(ent.label_.lower(), None):
             output[ent.label_.lower()] = []
-        education, employment = get_education_employment_keys(output)
-        if ent.label_.lower() in [education, employment]:
-            text = re.sub(r'[\s]', ' ', ent.text)
-            output[ent.label_.lower()] = text.encode('ascii', 'ignore').decode()
-        else:
-            output[ent.label_.lower()] += [t for t in ent.text.splitlines() if t.strip()]
+        output[ent.label_.lower()] += [t for t in ent.text.splitlines() if t.strip()]
     for ent in doc.ents:
         # removing duplicate skills
         if ent.label_.lower() == 'skill':
@@ -140,13 +135,17 @@ def filter_employments_educations(cv_data):
 
     education_key, employment_key = get_education_employment_keys(cv_data)
 
+    education_text = re.sub(r'[\s]', ' ', '\n'.join(cv_data.get(education_key, '')))
+    education_text = education_text.encode('ascii', 'ignore').decode()
     with nlp.disable_pipes('extract_position_employments'):
-        nlp(cv_data.get(education_key, ''))
+        nlp(education_text)
 
     cv_data['tagged_education'] = tagged_education
 
+    employment_text = re.sub(r'[\s]', ' ', '\n'.join(cv_data.get(employment_key, '')))
+    employment_text = employment_text.encode('ascii', 'ignore').decode()
     with nlp.disable_pipes('extract_degree_orgs'):
-        nlp(cv_data.get(employment_key, ''))
+        nlp(employment_text)
 
     cv_data['tagged_employment'] = tagged_employment
 
