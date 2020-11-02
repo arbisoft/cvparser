@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from flask_caching import Cache
 
 from constants import CACHE_CONFIG, StatusCode
-from main import process_file
+from main import process_file, process_job_description
 
 app = Flask(__name__, static_folder='static')
 app.config["DEBUG"] = False
@@ -37,6 +37,26 @@ def upload():
         return response
     except Exception as e:
         os.remove(file_path)
+        return app.response_class(
+            response=json.dumps({'error': str(e)}),
+            status=StatusCode.HTTP_400_BAD_REQUEST.value,
+            mimetype='application/json'
+        )
+
+
+@app.route('/retrieve_skills', methods=['POST'])
+def retrieve_skills():
+    try:
+        job_description = request.values.get('job_description', '')
+
+        output = process_job_description(job_description)
+
+        return app.response_class(
+            response=json.dumps({ 'skills': output }),
+            status=StatusCode.HTTP_200_OK.value,
+            mimetype='application/json'
+        )
+    except Exception as e:
         return app.response_class(
             response=json.dumps({'error': str(e)}),
             status=StatusCode.HTTP_400_BAD_REQUEST.value,
