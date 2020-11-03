@@ -178,3 +178,15 @@ def process_file(filepath):
     filter_employments_educations(output)
 
     return output, raw_output
+
+
+def process_job_description(job_description):
+    output = OrderedDict()
+
+    output = {
+        'skills': []
+    }
+
+    output = extract_entities(job_description, output)
+
+    return [ value for key, values in output.items() for value in values ]
